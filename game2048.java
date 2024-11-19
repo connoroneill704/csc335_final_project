@@ -1,7 +1,15 @@
 import java.util.Random;
 import java.util.Scanner;
+//For Time Trial
 import java.util.Timer;
 import java.util.TimerTask;
+//For Sounds
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.AudioInputStream;
+import java.io.File;
+
 
 public class game2048 {
     private int grid_size=4;
@@ -13,6 +21,8 @@ public class game2048 {
     private static String mode;
     private int moves;
     private int timeLeft;
+    //for sounds
+    private Clip background;
 
     public game2048() {
         board=new int[grid_size][grid_size];
@@ -79,11 +89,14 @@ public class game2048 {
         else if(command=='d'){
             moveRight();
         } else{
+        	playSound("Sounds/Beep.wav");
             System.out.println("Invalid move.");
         }
         if (made_move) {
+        	playSound("Sounds/Move.wav");
             addNewTile();
         } else {
+        	playSound("Sounds/Beep.wav");
             System.out.println("Can't move in that direction.");
         }
     }
@@ -217,9 +230,9 @@ public class game2048 {
         Scanner scanner=new Scanner(System.in);
         //Check game modes
         if (mode.equals("Time Trial")) {
-        	startTimer(20);
+        	startTimer(40);
         }else if(mode.equals("Move Limit")) {
-        	moves = 10;
+        	moves = 30;
         }
         //Print init board (no moves yet)
         printBoard();
@@ -231,7 +244,7 @@ public class game2048 {
         		break;
         	}
         	//if move limit mode and no moves left, end game
-        	if (mode.equals("Move Limit") && moves == 0) {
+        	if (mode.equals("Move Limit") && moves == 0) {	
         		System.out.println("No more moves. Game over :(");
         		break;
         	}
@@ -239,7 +252,7 @@ public class game2048 {
             System.out.print("Enter move (W/A/S/D): ");
             String input=scanner.nextLine().toLowerCase();
             if (input.isEmpty()) {
-                System.out.println("No input detected. Please use W, A, S, or D.");
+            	System.out.println("No input detected. Please use W, A, S, or D.");
                 continue;
             }
             char move=input.charAt(0);
@@ -255,7 +268,7 @@ public class game2048 {
                     break;
                 }
                 if (!hasMoves()) {
-                    System.out.println("Game Over!");
+                	System.out.println("Game Over!");
                     break;
                 }
             }
@@ -263,7 +276,6 @@ public class game2048 {
         scanner.close();
     }
     
-    //generic timer method 
     private void startTimer(int seconds) {
     	Timer timer = new Timer();
     	timeLeft = seconds;
@@ -278,14 +290,53 @@ public class game2048 {
     			}
     		}
     	};
+    	//runs task (run()) once every second. When no time left, timer cancels
     	timer.scheduleAtFixedRate(task, 0, 1000);
-    	
     }
-
+    
+    private void playBackground() {
+    	try {
+    		File file = new File("Sounds/Cool.wav");
+    		AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+            background = AudioSystem.getClip();
+            background.open(audioStream);
+            background.loop(Clip.LOOP_CONTINUOUSLY); // Loop music
+            background.start();
+            //volume
+            FloatControl gainControl = (FloatControl) background.getControl(FloatControl.Type.MASTER_GAIN);
+            gainControl.setValue(-35.0f);
+        } catch (Exception e) {
+            System.err.println("Error playing background music: " + e.getMessage());
+        }
+    }
+    
+    private void stopBackground() {
+        if (background != null && background.isRunning()) {
+        	background.stop();
+        	background.close();
+        }
+    }
+    
+    private void playSound(String soundFile) {
+        try {
+            File file = new File(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(file));
+            //volume
+            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            gainControl.setValue(-30.0f);
+            clip.start();
+            
+           
+        } catch (Exception e) {
+            System.err.println("Error playing sound: " + e.getMessage());
+        }
+    }
+    
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         //Ask user for which game mode they want to play
-        System.out.println("Choose a game mode\nTraditional, Time Trial, Move Limit\n");
+        System.out.println("Choose a game mode\nTraditional, Time Trial, Move Limit");
         String input = scanner.nextLine().toLowerCase();
         
         if (input.equals("traditional")) {
@@ -299,10 +350,13 @@ public class game2048 {
         	mode = "Traditional";
         }
         
-    	//pass the game mode found above to the game loop to play the correct game mode
         game2048 game=new game2048();
+        game.playBackground();
+        
         game.gameLoop();
+        game.stopBackground();
         
         scanner.close();
     }
 }
+
