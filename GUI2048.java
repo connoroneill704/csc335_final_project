@@ -2,8 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
+import java.util.HashMap;
 public class GUI2048 extends JFrame{
     private game2048 game;
+    private HashMap<Integer, ImageIcon> imageMap;
     private JLabel[][] tiles;
     private JLabel scoreLabel;
     private JPanel boardPanel;
@@ -11,11 +13,23 @@ public class GUI2048 extends JFrame{
 
     public GUI2048(){
         game = new game2048();
+        loadImages();
     }
 
     public static void main(String[] args) {
         GUI2048 game = new GUI2048();
         game.UI();
+    }
+
+    private void loadImages() {
+        imageMap = new HashMap<>();
+        int[] values = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048};
+        for (int val : values) {
+            ImageIcon icon = new ImageIcon("images/" + val + ".png");
+            Image img = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+            icon = new ImageIcon(img);
+            imageMap.put(val, icon);
+        }
     }
 
     public void UI(){
@@ -96,9 +110,11 @@ public class GUI2048 extends JFrame{
         for (int i = 0; i < 4; i++){
             for (int j = 0; j < 4; j++){
                 if (board[i][j] == 0){
+                    tiles[i][j].setIcon(null);
                     tiles[i][j].setText("");
                     tiles[i][j].setBackground(Color.LIGHT_GRAY);
                 } else {
+                    //tiles[i][j].setIcon(imageMap.get(board[i][j]));
                     tiles[i][j].setText("" + board[i][j]);
                     tiles[i][j].setBackground(getNumberColor(board[i][j]));
                 }
