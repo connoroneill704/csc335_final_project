@@ -5,6 +5,11 @@ import java.io.File;
 import java.util.HashMap;
 import javax.sound.sampled.*;
 
+/**
+ * Graphical user interface for the 2048 game.
+ * Allows the user to interact with the game with W, A, S, and D. 
+ * Displays the current game state and user score in a simple window.
+ */
 public class GUI2048 extends JFrame{
     private game2048 game;
     private HashMap<Integer, ImageIcon> imageMap;
@@ -17,14 +22,20 @@ public class GUI2048 extends JFrame{
     public GUI2048(){
         game = new game2048();
         loadImages();
-        playBackground(); //starts background music
+        playBackground(); 
     }
-
+    
+    /**
+     * Main method that starts a new game of 2048 and starts the GUI.
+     */
     public static void main(String[] args) {
         GUI2048 game = new GUI2048();
         game.UI();
     }
-
+    
+    /**
+     * Loads the images for each tile
+     */
     private void loadImages() {
         imageMap = new HashMap<>();
         int[] values = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048};
@@ -35,7 +46,10 @@ public class GUI2048 extends JFrame{
             imageMap.put(val, icon);
         }
     }
-
+    
+    /**
+     * Initializes the graphical user interface, with a game board and score display
+     */
     public void UI(){
         JFrame frame = new JFrame();
         frame.setTitle("2048 game");
@@ -61,6 +75,10 @@ public class GUI2048 extends JFrame{
         updateBoard();
         frame.setVisible(true);
     }
+    
+    /**
+     * Initializes the game board in a 4 x 4 grid
+     */
     private void makeBoardPanel() {
         boardPanel = new JPanel();
         boardPanel.setLayout(new GridLayout(4, 4));
@@ -77,14 +95,27 @@ public class GUI2048 extends JFrame{
             }
         }
     }
+    
+    /**
+     * Initializes the score panel
+     * 
+     * @post	the score panel with be initizaled to 0 points
+     */
     private void makeScorePanel(){
         scorePanel = new JPanel();
         scorePanel.setLayout(new GridLayout(1, 1));
         scoreLabel = new JLabel("Score: " + game.getScore());
         scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
         scorePanel.add(scoreLabel);
-
     }
+    
+    /**
+     * Handles the user input's from the keyboard (W,A,S,D) and calls the neccessary
+     * game functions to update the board and score.
+     * Also checks if the game is valid and ends game if the user loses
+     * 
+     * @param	e - The key pressed by the user
+     */
     private void useInput(KeyEvent e){
         boolean validMove = false;
     	int[][] curBoard = copyBoard(game.getBoard());
@@ -114,8 +145,9 @@ public class GUI2048 extends JFrame{
             game.addNewTile();
             //check if game is over
             if (!game.hasMoves()) {
+            	playSound("Sounds/Beep.wav");
+            	stopBackground(); // Stop background music
                 JOptionPane.showMessageDialog(null, "Game Over! Your score is: " + game.getScore());
-                stopBackground(); // Stop background music
                 System.exit(0);
             }
             updateBoard();
@@ -123,6 +155,12 @@ public class GUI2048 extends JFrame{
         }
     }
     
+    /**
+     * Creates a copy of the current game board to be compared
+     * 
+     * @param 	board - the current game board being copied
+     * @return	a copied version of the same 2D array that is the current game board
+     */
     private int[][] copyBoard(int[][] board) {
         int[][] copy = new int[board.length][board[0].length];
         for (int i = 0; i < board.length; i++) {
@@ -131,6 +169,13 @@ public class GUI2048 extends JFrame{
         return copy;
     }
     
+    /**
+     * Compares two boards to see if they are equals
+     * 
+     * @param	board1 - first board to compare
+     * @param	board2 - second board being compared
+     * @return	if the boards are equal or not
+     */
     private boolean areBoardsEqual(int[][] board1, int[][] board2) {
         for (int i = 0; i < board1.length; i++) {
             for (int j = 0; j < board1[i].length; j++) {
@@ -142,24 +187,35 @@ public class GUI2048 extends JFrame{
         return true;
     }
     
+    /**
+     * Updates the board state of the GUI based on the current game state
+     */
     private void updateBoard(){
         int[][] board = game.getBoard();
         for (int i = 0; i < 4; i++){
             for (int j = 0; j < 4; j++){
+            	//if empty (0 in array) make into blank space in GUI
                 if (board[i][j] == 0){
                     tiles[i][j].setIcon(null);
                     tiles[i][j].setText("");
                     tiles[i][j].setBackground(Color.LIGHT_GRAY);
                 } else {
+                //if tile is a number, find that tile color, number, and add to the GUI
                     tiles[i][j].setText("" + board[i][j]);
                     tiles[i][j].setBackground(getNumberColor(board[i][j]));
-                    tiles[i][j].setFont(new Font("Arial", Font.BOLD, 30)); // Change "30" to your preferred size
+                    tiles[i][j].setFont(new Font("Arial", Font.BOLD, 30)); 
                     tiles[i][j].setForeground(Color.BLACK);
                 }
             }
         }
     }
     
+    /**
+     * Returns the color of the background of each respective tile
+     * 
+     * @param 	val - the valeue of the tile being colored (2, 4, 8, ...)
+     * @return	the color associated with that tile value
+     */
     private Color getNumberColor(int val){
         switch (val){
 	        case 2:
@@ -189,7 +245,12 @@ public class GUI2048 extends JFrame{
         }
     }
     
- // Music and Sound Methods
+    // Music and Sound Methods
+    /**
+     * Starts playing the background music from the Sounds folder in the directory
+     * 
+     * @post	background music will be playing
+     */
     private void playBackground() {
         try {
             File file = new File("Sounds/Cool.wav");
@@ -206,6 +267,11 @@ public class GUI2048 extends JFrame{
         }
     }
 
+    /**
+     * Stops the background music being played (when game ends)
+     * 
+     * @post	no background music will be playing
+     */
     private void stopBackground() {
         if (background != null && background.isRunning()) {
             background.stop();
@@ -213,6 +279,12 @@ public class GUI2048 extends JFrame{
         }
     }
 
+    /**
+     * Plays the inputted sound effect for a given game action
+     * 
+     * @param	soundFile - the .wav file that is to be played for a specific action
+     * @post 	the .wav file from soundFile will be played one time
+     */
     private void playSound(String soundFile) {
         try {
             File file = new File(soundFile);
