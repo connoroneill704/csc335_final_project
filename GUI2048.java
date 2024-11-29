@@ -1,8 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
+import java.io.File;
 import java.util.HashMap;
+import javax.sound.sampled.*;
+
 public class GUI2048 extends JFrame{
     private game2048 game;
     private HashMap<Integer, ImageIcon> imageMap;
@@ -10,10 +12,12 @@ public class GUI2048 extends JFrame{
     private JLabel scoreLabel;
     private JPanel boardPanel;
     private JPanel scorePanel;
+    private Clip background;
 
     public GUI2048(){
         game = new game2048();
         loadImages();
+        playBackground(); //starts background music
     }
 
     public static void main(String[] args) {
@@ -82,7 +86,9 @@ public class GUI2048 extends JFrame{
 
     }
     private void useInput(KeyEvent e){
-        switch (e.getKeyCode()){
+        boolean validMove = false;
+    	int[][] curBoard = copyBoard(game.getBoard());
+    	switch (e.getKeyCode()){
             case KeyEvent.VK_W:
                 game.moveUp();
                 break;
@@ -95,16 +101,47 @@ public class GUI2048 extends JFrame{
             case KeyEvent.VK_D:
                 game.moveRight();
                 break;
+            default:
+            	playSound("Sounds/Beep.wav");
+                JOptionPane.showMessageDialog(null, "Invalid key! Use W, A, S, D for moves.");
         }
-        game.addNewTile();
-        if (game.hasMoves() == false){
-            JOptionPane.showMessageDialog(null, "Game Over! Your score is: " + game.getScore());
-            System.exit(0);
+    	//if the board was not changed, dont add a new tile
+    	if (!areBoardsEqual(curBoard, game.getBoard())) {
+    		validMove = true;
+    	}
+    	if (validMove) {
+            playSound("Sounds/Move.wav"); // Move sound
+            game.addNewTile();
+            //check if game is over
+            if (!game.hasMoves()) {
+                JOptionPane.showMessageDialog(null, "Game Over! Your score is: " + game.getScore());
+                stopBackground(); // Stop background music
+                System.exit(0);
+            }
+            updateBoard();
+            scoreLabel.setText("Score: " + game.getScore());
         }
-        updateBoard();
-        scoreLabel.setText("Score: " + game.getScore());
-
     }
+    
+    private int[][] copyBoard(int[][] board) {
+        int[][] copy = new int[board.length][board[0].length];
+        for (int i = 0; i < board.length; i++) {
+            System.arraycopy(board[i], 0, copy[i], 0, board[i].length);
+        }
+        return copy;
+    }
+    
+    private boolean areBoardsEqual(int[][] board1, int[][] board2) {
+        for (int i = 0; i < board1.length; i++) {
+            for (int j = 0; j < board1[i].length; j++) {
+                if (board1[i][j] != board2[i][j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
     private void updateBoard(){
         int[][] board = game.getBoard();
         for (int i = 0; i < 4; i++){
@@ -114,40 +151,79 @@ public class GUI2048 extends JFrame{
                     tiles[i][j].setText("");
                     tiles[i][j].setBackground(Color.LIGHT_GRAY);
                 } else {
-                    //tiles[i][j].setIcon(imageMap.get(board[i][j]));
                     tiles[i][j].setText("" + board[i][j]);
                     tiles[i][j].setBackground(getNumberColor(board[i][j]));
+                    tiles[i][j].setFont(new Font("Arial", Font.BOLD, 30)); // Change "30" to your preferred size
+                    tiles[i][j].setForeground(Color.BLACK);
                 }
             }
         }
-
     }
+    
     private Color getNumberColor(int val){
         switch (val){
-            case 2:
-                return new Color(160, 220, 250);
-            case 4:
-                return new Color(140, 220, 250);
-            case 8:
-                return new Color(120, 220, 250);
-            case 16:
-                return new Color(100, 220, 250);
-            case 32:
-                return new Color(80, 220, 250);
-            case 64:
-                return new Color(60, 220, 250);
-            case 128:
-                return new Color(40, 220, 250);
-            case 256:
-                return new Color(20, 220, 250);
-            case 512:
-                return new Color(0, 220, 250);
-            case 1024:
-                return new Color(20, 100, 250);
-            case 2048:
-                return new Color(10, 80, 225);
-            default:
-                return new Color(0, 60, 225);
+	        case 2:
+	            return new Color(191, 255, 191); 
+	        case 4:
+	            return new Color(153, 255, 153); 
+	        case 8:
+	            return new Color(102, 255, 102);
+	        case 16:
+	            return new Color(51, 255, 51);  
+	        case 32:
+	            return new Color(0, 204, 255);   
+	        case 64:
+	            return new Color(0, 153, 255);   
+	        case 128:
+	            return new Color(0, 102, 204); 
+	        case 256:
+	            return new Color(0, 76, 153);   
+	        case 512:
+	            return new Color(0, 51, 102);    
+	        case 1024:
+	            return new Color(0, 25, 51);     
+	        case 2048:
+	            return new Color(0, 0, 30);      
+	        default:
+	            return new Color(0, 0, 51);  
+        }
+    }
+    
+ // Music and Sound Methods
+    private void playBackground() {
+        try {
+            File file = new File("Sounds/Cool.wav");
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+            background = AudioSystem.getClip();
+            background.open(audioStream);
+            background.loop(Clip.LOOP_CONTINUOUSLY);
+            background.start();
+            //volume
+            FloatControl gainControl = (FloatControl) background.getControl(FloatControl.Type.MASTER_GAIN);
+            gainControl.setValue(-35.0f);
+        } catch (Exception e) {
+            System.err.println("Error playing background music: " + e.getMessage());
+        }
+    }
+
+    private void stopBackground() {
+        if (background != null && background.isRunning()) {
+            background.stop();
+            background.close();
+        }
+    }
+
+    private void playSound(String soundFile) {
+        try {
+            File file = new File(soundFile);
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(file));
+            clip.start();
+            //volume
+            FloatControl gainControl = (FloatControl) background.getControl(FloatControl.Type.MASTER_GAIN);
+            gainControl.setValue(-30.0f);
+        } catch (Exception e) {
+            System.err.println("Error playing sound: " + e.getMessage());
         }
     }
 }
