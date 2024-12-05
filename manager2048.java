@@ -10,14 +10,14 @@ public class manager2048 {
     private int timeLeft;
     private boolean gameOver;
     private HighScoreManager highScoreManager;
-    private Timer timer;
-    private Scanner scanner;
+    private static Scanner scanner;
 
     public manager2048(String mode) {
         this.mode = mode;
         gameLogic = new logic2048(4); // Assuming a 4x4 grid
         highScoreManager = new HighScoreManager();
         gameOver = false;
+        scanner= new Scanner(System.in);
 
         if (mode.equalsIgnoreCase("Time Trial")) {
             startTimer(40);
@@ -27,7 +27,16 @@ public class manager2048 {
     }
     
     public manager2048(String mode, Scanner scanner) {
-        this(mode);
+    	this.mode = mode;
+        gameLogic = new logic2048(4); // Assuming a 4x4 grid
+        highScoreManager = new HighScoreManager();
+        gameOver = false;
+
+        if (mode.equalsIgnoreCase("Time Trial")) {
+            startTimer(40);
+        } else if (mode.equalsIgnoreCase("Move Limit")) {
+        	moves = 30;
+        }
         this.scanner = scanner;
     }
 
@@ -131,7 +140,6 @@ public class manager2048 {
     }
 
     private void endGame() {
-        Scanner scanner = new Scanner(System.in);
         System.out.print("Enter your username: ");
         String name = scanner.nextLine();
         highScoreManager.addScore(name, gameLogic.getScore());
@@ -150,6 +158,7 @@ public class manager2048 {
 
     // Timer for Time Trial mode
     private void startTimer(int seconds) {
+        Timer timer = new Timer();
         timeLeft = seconds;
 
         TimerTask task = new TimerTask() {
@@ -171,7 +180,6 @@ public class manager2048 {
     }
 
     private static String selectGameMode() {
-        Scanner scanner = new Scanner(System.in);
         System.out.println("Choose a game mode: Traditional, Time Trial, Move Limit");
         String input = scanner.nextLine().trim().toLowerCase();
 
@@ -199,5 +207,8 @@ public class manager2048 {
 
     public logic2048 getGameLogic() {
         return gameLogic;
+    }
+    public HighScoreManager getHighScoreManager() {
+        return highScoreManager;
     }
 }
