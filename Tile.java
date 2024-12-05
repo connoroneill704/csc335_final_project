@@ -2,11 +2,13 @@ public class Tile {
     private int value;
     private int row;
     private int col;
+    private boolean merged;
 
     public Tile(int value, int row, int col) {
         this.value = value;
         this.row = row;
         this.col = col;
+        this.merged = false;
     }
 
     // Getter and setter methods

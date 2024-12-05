@@ -1,6 +1,6 @@
 import java.util.Stack;
 
-public class GameLogic {
+public class logic2048 {
     private board2048 gameBoard;
     private int score;
     private boolean won;
@@ -17,7 +17,7 @@ public class GameLogic {
         scoreHistory = new Stack<>();
     }
 
-    public GameBoard getGameBoard() {
+    public board2048 getGameBoard() {
         return gameBoard;
     }
 
@@ -38,27 +38,27 @@ public class GameLogic {
         saveState();
         gameBoard.resetMergedFlags();
         int gridSize = gameBoard.getGridSize();
+        Tile[][] board = gameBoard.getBoard();
 
         for (int i = 0; i < gridSize; i++) {
             for (int j = 1; j < gridSize; j++) {
-                Tile tile = gameBoard.getTile(i, j);
-                if (tile != null) {
+                if (board[i][j] != null) {
                     int col = j;
-                    while (col > 0 && gameBoard.getTile(i, col - 1) == null) {
-                        gameBoard.setTile(i, col - 1, tile);
-                        gameBoard.setTile(i, col, null);
+                    Tile tile = board[i][col];
+                    while (col > 0 && board[i][col - 1] == null) {
+                        board[i][col - 1] = tile;
+                        board[i][col] = null;
                         col--;
                         madeMove = true;
                     }
-                    Tile targetTile = gameBoard.getTile(i, col - 1);
-                    if (col > 0 && targetTile != null &&
-                        targetTile.getValue() == tile.getValue() &&
-                        !targetTile.isMerged() && !tile.isMerged()) {
+                    if (col > 0 && board[i][col - 1] != null &&
+                        board[i][col - 1].getValue() == tile.getValue() &&
+                        !board[i][col - 1].isMerged() && !tile.isMerged()) {
 
-                        int newValue = targetTile.getValue() * 2;
-                        targetTile.setValue(newValue);
-                        targetTile.setMerged(true);
-                        gameBoard.setTile(i, col, null);
+                        int newValue = board[i][col - 1].getValue() * 2;
+                        board[i][col - 1].setValue(newValue);
+                        board[i][col - 1].setMerged(true);
+                        board[i][col] = null;
                         score += newValue;
                         madeMove = true;
                         if (newValue == 2048) won = true;
@@ -71,92 +71,117 @@ public class GameLogic {
         }
     }
 
-    // move right
     public void moveRight() {
-        resetMergedFlags();
-        for (int row = 0; row < grid_size; row++) {
-            for (int col = grid_size - 2; col >= 0; col--) {
+        madeMove = false;
+        saveState();
+        gameBoard.resetMergedFlags();
+        int gridSize = gameBoard.getGridSize();
+        Tile[][] board = gameBoard.getBoard();
+
+        for (int row = 0; row < gridSize; row++) {
+            for (int col = gridSize - 2; col >= 0; col--) {
                 if (board[row][col] != null) {
                     int currentCol = col;
-                    while (currentCol < grid_size - 1 && board[row][currentCol + 1] == null) {
-                        board[row][currentCol + 1] = board[row][currentCol];
+                    Tile tile = board[row][currentCol];
+                    while (currentCol < gridSize - 1 && board[row][currentCol + 1] == null) {
+                        board[row][currentCol + 1] = tile;
                         board[row][currentCol] = null;
                         currentCol++;
-                        made_move = true;
+                        madeMove = true;
                     }
-                    if (currentCol < grid_size - 1 && board[row][currentCol + 1] != null &&
-                        board[row][currentCol + 1].getValue() == board[row][currentCol].getValue() &&
-                        !board[row][currentCol + 1].isMerged() && !board[row][currentCol].isMerged()) {
-                        
+                    if (currentCol < gridSize - 1 && board[row][currentCol + 1] != null &&
+                        board[row][currentCol + 1].getValue() == tile.getValue() &&
+                        !board[row][currentCol + 1].isMerged() && !tile.isMerged()) {
+
                         int newValue = board[row][currentCol + 1].getValue() * 2;
                         board[row][currentCol + 1].setValue(newValue);
                         board[row][currentCol + 1].setMerged(true);
                         board[row][currentCol] = null;
                         score += newValue;
-                        made_move = true;
+                        madeMove = true;
                         if (newValue == 2048) won = true;
                     }
                 }
             }
         }
+        if (madeMove) {
+            gameBoard.addNewTile();
+        }
     }
 
-    // move up
     public void moveUp() {
-        resetMergedFlags();
-        for (int col = 0; col < grid_size; col++) {
-            for (int row = 1; row < grid_size; row++) {
+        madeMove = false;
+        saveState();
+        gameBoard.resetMergedFlags();
+        int gridSize = gameBoard.getGridSize();
+        Tile[][] board = gameBoard.getBoard();
+
+        for (int col = 0; col < gridSize; col++) {
+            for (int row = 1; row < gridSize; row++) {
                 if (board[row][col] != null) {
                     int currentRow = row;
+                    Tile tile = board[currentRow][col];
                     while (currentRow > 0 && board[currentRow - 1][col] == null) {
-                        board[currentRow - 1][col] = board[currentRow][col];
+                        board[currentRow - 1][col] = tile;
                         board[currentRow][col] = null;
                         currentRow--;
-                        made_move = true;
+                        madeMove = true;
                     }
                     if (currentRow > 0 && board[currentRow - 1][col] != null &&
-                        board[currentRow - 1][col].getValue() == board[currentRow][col].getValue() &&
-                        !board[currentRow - 1][col].isMerged() && !board[currentRow][col].isMerged()) {
-                        
+                        board[currentRow - 1][col].getValue() == tile.getValue() &&
+                        !board[currentRow - 1][col].isMerged() && !tile.isMerged()) {
+
                         int newValue = board[currentRow - 1][col].getValue() * 2;
                         board[currentRow - 1][col].setValue(newValue);
                         board[currentRow - 1][col].setMerged(true);
                         board[currentRow][col] = null;
                         score += newValue;
-                        made_move = true;
+                        madeMove = true;
                         if (newValue == 2048) won = true;
                     }
                 }
             }
         }
+        if (madeMove) {
+            gameBoard.addNewTile();
+        }
     }
 
     public void moveDown() {
-        resetMergedFlags();
-        for (int col = 0; col < grid_size; col++) {
-            for (int row = grid_size - 2; row >= 0; row--) {
+        madeMove = false;
+        saveState();
+        gameBoard.resetMergedFlags();
+        int gridSize = gameBoard.getGridSize();
+        Tile[][] board = gameBoard.getBoard();
+
+        for (int col = 0; col < gridSize; col++) {
+            for (int row = gridSize - 2; row >= 0; row--) {
                 if (board[row][col] != null) {
                     int currentRow = row;
-                    while (currentRow < grid_size - 1 && board[currentRow + 1][col] == null) {
-                        board[currentRow + 1][col] = board[currentRow][col];
+                    Tile tile = board[currentRow][col];
+                    while (currentRow < gridSize - 1 && board[currentRow + 1][col] == null) {
+                        board[currentRow + 1][col] = tile;
                         board[currentRow][col] = null;
                         currentRow++;
-                        made_move = true;
+                        madeMove = true;
                     }
-                    if (currentRow < grid_size - 1 && board[currentRow + 1][col] != null &&
-                        board[currentRow + 1][col].getValue() == board[currentRow][col].getValue() &&
-                        !board[currentRow + 1][col].isMerged() && !board[currentRow][col].isMerged()) {
-                        
+                    if (currentRow < gridSize - 1 && board[currentRow + 1][col] != null &&
+                        board[currentRow + 1][col].getValue() == tile.getValue() &&
+                        !board[currentRow + 1][col].isMerged() && !tile.isMerged()) {
+
                         int newValue = board[currentRow + 1][col].getValue() * 2;
                         board[currentRow + 1][col].setValue(newValue);
                         board[currentRow + 1][col].setMerged(true);
                         board[currentRow][col] = null;
                         score += newValue;
-                        made_move = true;
+                        madeMove = true;
                         if (newValue == 2048) won = true;
                     }
                 }
             }
+        }
+        if (madeMove) {
+            gameBoard.addNewTile();
         }
     }
 
@@ -193,7 +218,7 @@ public class GameLogic {
         if (!boardHistory.isEmpty() && !scoreHistory.isEmpty()) {
             Tile[][] previousBoard = boardHistory.pop();
             int previousScore = scoreHistory.pop();
-            gameBoard = new GameBoard(gameBoard.getGridSize());
+            gameBoard = new board2048(gameBoard.getGridSize());
             Tile[][] currentBoard = gameBoard.getBoard();
             for (int i = 0; i < gameBoard.getGridSize(); i++) {
                 for (int j = 0; j < gameBoard.getGridSize(); j++) {

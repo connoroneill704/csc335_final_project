@@ -4,25 +4,32 @@ import java.awt.event.*;
 import java.io.File;
 import java.util.HashMap;
 import javax.sound.sampled.*;
-
+import java.util.List;
 /**
  * Graphical user interface for the 2048 game.
  * Allows the user to interact with the game with W, A, S, and D. 
  * Displays the current game state and user score in a simple window.
  */
 public class GUI2048 extends JFrame{
-    private game2048 game;
+    private logic2048 game;
     private HashMap<Integer, ImageIcon> imageMap;
     private JLabel[][] tiles;
     private JLabel scoreLabel;
     private JPanel boardPanel;
     private JPanel scorePanel;
     private Clip background;
+    private JButton undoButton;
+    private HighScoreManager highScoreManager;
+    private Settings settings;
+    
 
     public GUI2048(){
-        game = new game2048();
+        game = new logic2048(4);
         loadImages();
-        playBackground(); 
+        playBackground();
+        highScoreManager = new HighScoreManager();
+        settings = new Settings();
+        applySettings(); 
     }
     
     /**
@@ -57,14 +64,16 @@ public class GUI2048 extends JFrame{
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
-        game = new game2048();
 
         makeBoardPanel();
         makeScorePanel();
+        createMenuBar();
         frame.add(scoreLabel, BorderLayout.NORTH);
         frame.add(boardPanel, BorderLayout.CENTER);
         frame.setFocusable(true);
         frame.requestFocusInWindow();
+        makeControlPanel();
+        frame.add(controlPanel, BorderLayout.SOUTH);
 
         frame.addKeyListener(new KeyAdapter() {
             @Override
@@ -74,6 +83,89 @@ public class GUI2048 extends JFrame{
         });
         updateBoard();
         frame.setVisible(true);
+    }
+
+    private void applySettings() {
+        double volume = settings.getVolume();
+        setVolume(volume);
+        String theme = settings.getTheme();
+        setTheme(theme);
+    }
+
+    private void createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Options");
+
+        JMenuItem settingsItem = new JMenuItem("Settings");
+        settingsItem.addActionListener(e -> openSettingsDialog());
+
+        JMenuItem highScoresItem = new JMenuItem("High Scores");
+        highScoresItem.addActionListener(e -> displayHighScores());
+
+        menu.add(settingsItem);
+        menu.add(highScoresItem);
+        menuBar.add(menu);
+        setJMenuBar(menuBar);
+    }
+
+    private void openSettingsDialog() {
+        JDialog settingsDialog = new JDialog(this, "Settings", true);
+        settingsDialog.setSize(300, 200);
+        settingsDialog.setLayout(new GridLayout(3, 2));
+
+        // Volume control
+        JLabel volumeLabel = new JLabel("Volume:");
+        JSlider volumeSlider = new JSlider(0, 100, (int)(settings.getVolume() * 100));
+        volumeSlider.addChangeListener(e -> {
+            double volume = volumeSlider.getValue() / 100.0;
+            settings.setVolume(volume);
+            setVolume(volume);
+        });
+
+        // Theme selection
+        JLabel themeLabel = new JLabel("Theme:");
+        String[] themes = {"Default", "Dark", "Light"};
+        JComboBox<String> themeComboBox = new JComboBox<>(themes);
+        themeComboBox.setSelectedItem(settings.getTheme());
+        themeComboBox.addActionListener(e -> {
+            String theme = (String) themeComboBox.getSelectedItem();
+            settings.setTheme(theme);
+            setTheme(theme);
+        });
+
+        // Add components to dialog
+        settingsDialog.add(volumeLabel);
+        settingsDialog.add(volumeSlider);
+        settingsDialog.add(themeLabel);
+        settingsDialog.add(themeComboBox);
+
+        // Save and Close button
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener(e -> {
+            settings.saveSettings();
+            settingsDialog.dispose();
+        });
+        settingsDialog.add(new JLabel()); // Placeholder
+        settingsDialog.add(saveButton);
+
+        settingsDialog.setVisible(true);
+    }
+
+    private void setVolume(double volume) {
+    }
+
+    private void setTheme(String theme) {
+    }
+
+    private void displayHighScores() {
+        List<HighScoreManager.ScoreEntry> highScores = highScoreManager.getHighScores();
+        StringBuilder sb = new StringBuilder();
+        sb.append("High Scores:\n");
+        for (int i = 0; i < highScores.size(); i++) {
+            HighScoreManager.ScoreEntry entry = highScores.get(i);
+            sb.append(String.format("%d. %s - %d\n", i + 1, entry.getName(), entry.getScore()));
+        }
+        JOptionPane.showMessageDialog(this, sb.toString(), "High Scores", JOptionPane.INFORMATION_MESSAGE);
     }
     
     /**
@@ -118,7 +210,6 @@ public class GUI2048 extends JFrame{
      */
     private void useInput(KeyEvent e){
         boolean validMove = false;
-    	int[][] curBoard = copyBoard(game.getBoard());
     	switch (e.getKeyCode()){
             case KeyEvent.VK_W:
                 game.moveUp();
@@ -135,23 +226,26 @@ public class GUI2048 extends JFrame{
             default:
             	playSound("Sounds/Beep.wav");
                 JOptionPane.showMessageDialog(null, "Invalid key! Use W, A, S, D for moves.");
+                return;
         }
-    	//if the board was not changed, dont add a new tile
-    	if (!areBoardsEqual(curBoard, game.getBoard())) {
-    		validMove = true;
-    	}
-    	if (validMove) {
-            playSound("Sounds/Move.wav"); // Move sound
-            game.addNewTile();
-            //check if game is over
-            if (!game.hasMoves()) {
-            	playSound("Sounds/Beep.wav");
-            	stopBackground(); // Stop background music
-                JOptionPane.showMessageDialog(null, "Game Over! Your score is: " + game.getScore());
-                System.exit(0);
-            }
+    	if (game.hasMadeMove()) {
+            validMove = true;
+        }
+    
+        if (validMove) {
+            playSound("Sounds/Move.wav"); 
             updateBoard();
             scoreLabel.setText("Score: " + game.getScore());
+            if (!game.hasMoves()) {
+                playSound("Sounds/Beep.wav");
+                stopBackground(); // Stop background music
+                String name = JOptionPane.showInputDialog(this, "Game Over! Your score is: " + game.getScore() + "\nEnter your name:");
+                if (name != null && !name.trim().isEmpty()) {
+                    highScoreManager.addScore(name, game.getScore());
+                }
+                displayHighScores();
+                System.exit(0);
+            }
         }
     }
     
@@ -161,10 +255,17 @@ public class GUI2048 extends JFrame{
      * @param 	board - the current game board being copied
      * @return	a copied version of the same 2D array that is the current game board
      */
-    private int[][] copyBoard(int[][] board) {
-        int[][] copy = new int[board.length][board[0].length];
+    private Tile[][] copyBoard(Tile[][] board) {
+        Tile[][] copy = new Tile[board.length][board[0].length];
         for (int i = 0; i < board.length; i++) {
-            System.arraycopy(board[i], 0, copy[i], 0, board[i].length);
+            for (int j = 0; j < board[i].length; j++) {
+                Tile tile = board[i][j];
+                if (tile != null) {
+                    copy[i][j] = new Tile(tile.getValue(), tile.getRow(), tile.getCol());
+                } else {
+                    copy[i][j] = null;
+                }
+            }
         }
         return copy;
     }
@@ -176,10 +277,18 @@ public class GUI2048 extends JFrame{
      * @param	board2 - second board being compared
      * @return	if the boards are equal or not
      */
-    private boolean areBoardsEqual(int[][] board1, int[][] board2) {
+    private boolean areBoardsEqual(Tile[][] board1, Tile[][] board2) {
         for (int i = 0; i < board1.length; i++) {
             for (int j = 0; j < board1[i].length; j++) {
-                if (board1[i][j] != board2[i][j]) {
+                Tile tile1 = board1[i][j];
+                Tile tile2 = board2[i][j];
+                if (tile1 == null && tile2 == null) {
+                    continue;
+                }
+                if (tile1 == null || tile2 == null) {
+                    return false;
+                }
+                if (tile1.getValue() != tile2.getValue()) {
                     return false;
                 }
             }
@@ -190,25 +299,26 @@ public class GUI2048 extends JFrame{
     /**
      * Updates the board state of the GUI based on the current game state
      */
-    private void updateBoard(){
-        int[][] board = game.getBoard();
-        for (int i = 0; i < 4; i++){
-            for (int j = 0; j < 4; j++){
-            	//if empty (0 in array) make into blank space in GUI
-                if (board[i][j] == 0){
+    private void updateBoard() {
+        Tile[][] board = game.getGameBoard().getBoard();
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                Tile tile = board[i][j];
+                if (tile == null) {
                     tiles[i][j].setIcon(null);
                     tiles[i][j].setText("");
                     tiles[i][j].setBackground(Color.LIGHT_GRAY);
                 } else {
-                //if tile is a number, find that tile color, number, and add to the GUI
-                    tiles[i][j].setText("" + board[i][j]);
-                    tiles[i][j].setBackground(getNumberColor(board[i][j]));
-                    tiles[i][j].setFont(new Font("Arial", Font.BOLD, 30)); 
+                    int value = tile.getValue();
+                    tiles[i][j].setText("" + value);
+                    tiles[i][j].setBackground(getNumberColor(value));
+                    tiles[i][j].setFont(new Font("Arial", Font.BOLD, 30));
                     tiles[i][j].setForeground(Color.BLACK);
                 }
             }
         }
     }
+    
     
     /**
      * Returns the color of the background of each respective tile
@@ -290,12 +400,25 @@ public class GUI2048 extends JFrame{
             File file = new File(soundFile);
             Clip clip = AudioSystem.getClip();
             clip.open(AudioSystem.getAudioInputStream(file));
-            clip.start();
             //volume
-            FloatControl gainControl = (FloatControl) background.getControl(FloatControl.Type.MASTER_GAIN);
+            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
             gainControl.setValue(-30.0f);
+            clip.start();
         } catch (Exception e) {
             System.err.println("Error playing sound: " + e.getMessage());
         }
+    }
+
+    private JPanel controlPanel;
+
+    private void makeControlPanel() {
+        controlPanel = new JPanel();
+        undoButton = new JButton("Undo");
+        undoButton.addActionListener(e -> {
+            game.undoMove();
+            updateBoard();
+            scoreLabel.setText("Score: " + game.getScore());
+        });
+        controlPanel.add(undoButton);
     }
 }

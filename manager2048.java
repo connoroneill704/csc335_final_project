@@ -1,4 +1,7 @@
+import java.util.List;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class manager2048 {
     private logic2048 gameLogic;
@@ -7,10 +10,12 @@ public class manager2048 {
     private int timeLeft;
     private boolean gameOver;
     private HighScoreManager highScoreManager;
+    private Timer timer;
+    private Scanner scanner;
 
     public manager2048(String mode) {
         this.mode = mode;
-        gameLogic = logic2048(4); // Assuming a 4x4 grid
+        gameLogic = new logic2048(4); // Assuming a 4x4 grid
         highScoreManager = new HighScoreManager();
         gameOver = false;
 
@@ -20,10 +25,14 @@ public class manager2048 {
             moves = 30;
         }
     }
+    
+    public manager2048(String mode, Scanner scanner) {
+        this(mode);
+        this.scanner = scanner;
+    }
 
     public void startGame() {
         printBoard();
-        Scanner scanner = new Scanner(System.in);
 
         while (!gameOver) {
             if (mode.equalsIgnoreCase("Time Trial") && timeLeft == 0) {
@@ -132,16 +141,15 @@ public class manager2048 {
 
     private void displayHighScores() {
         System.out.println("\n--- High Scores ---");
-        List<ScoreManager.ScoreEntry> highScores = highScoreManager.getHighScores();
+        List<HighScoreManager.ScoreEntry> highScores = highScoreManager.getHighScores();
         for (int i = 0; i < highScores.size(); i++) {
-            ScoreManager.ScoreEntry entry = highScores.get(i);
+            HighScoreManager.ScoreEntry entry = highScores.get(i);
             System.out.printf("%d. %s - %d\n", i + 1, entry.getName(), entry.getScore());
         }
     }
 
     // Timer for Time Trial mode
     private void startTimer(int seconds) {
-        Timer timer = new Timer();
         timeLeft = seconds;
 
         TimerTask task = new TimerTask() {
@@ -158,7 +166,7 @@ public class manager2048 {
     }
     public static void main(String[] args) {
         String mode = selectGameMode();
-        GameManager gameManager = new GameManager(mode);2
+        manager2048 gameManager = new manager2048(mode);
         gameManager.startGame();
     }
 
@@ -180,5 +188,16 @@ public class manager2048 {
         }
         scanner.close();
         return mode;
+    }
+    public String getMode() {
+        return mode;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public logic2048 getGameLogic() {
+        return gameLogic;
     }
 }
