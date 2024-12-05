@@ -13,7 +13,7 @@ import java.util.List;
 public class GUI2048 extends JFrame{
     private logic2048 game;
     private HashMap<Integer, ImageIcon> imageMap;
-    private JLabel[][] tiles;
+    private TileLabel[][] tiles;
     private JLabel scoreLabel;
     private JPanel boardPanel;
     private JPanel scorePanel;
@@ -21,10 +21,10 @@ public class GUI2048 extends JFrame{
     private JButton undoButton;
     private HighScoreManager highScoreManager;
     private Settings settings;
+    private JFrame frame;
     
 
     public GUI2048(){
-        game = new logic2048(4);
         loadImages();
         playBackground();
         highScoreManager = new HighScoreManager();
@@ -44,7 +44,7 @@ public class GUI2048 extends JFrame{
      * Loads the images for each tile
      */
     private void loadImages() {
-        imageMap = new HashMap<>();
+    	imageMap = new HashMap<>();
         int[] values = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048};
         for (int val : values) {
             ImageIcon icon = new ImageIcon("images/" + val + ".png");
@@ -57,17 +57,24 @@ public class GUI2048 extends JFrame{
     /**
      * Initializes the graphical user interface, with a game board and score display
      */
-    public void UI(){
-        JFrame frame = new JFrame();
-        frame.setTitle("2048 game");
-        frame.setSize(400,500);
+    public void UI() {
+        frame = new JFrame("2048 game");
+        frame.setSize(400, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
 
-        makeBoardPanel();
-        makeScorePanel();
         createMenuBar();
+        startNewGame(); // Now frame is initialized before this call
+
+        makeControlPanel();
+        frame.add(controlPanel, BorderLayout.SOUTH);
+
+        frame.setFocusable(true);
+        frame.requestFocusInWindow();
+        updateBoard();
+        frame.setVisible(true);
+
         frame.add(scoreLabel, BorderLayout.NORTH);
         frame.add(boardPanel, BorderLayout.CENTER);
         frame.setFocusable(true);
@@ -75,14 +82,42 @@ public class GUI2048 extends JFrame{
         makeControlPanel();
         frame.add(controlPanel, BorderLayout.SOUTH);
 
-        frame.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                useInput(e);
-            }
-        });
         updateBoard();
         frame.setVisible(true);
+        InputMap inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = frame.getRootPane().getActionMap();
+
+        inputMap.put(KeyStroke.getKeyStroke("W"), "moveUp");
+        actionMap.put("moveUp", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                useInput(KeyEvent.VK_W);
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("A"), "moveLeft");
+        actionMap.put("moveLeft", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                useInput(KeyEvent.VK_A);
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("S"), "moveDown");
+        actionMap.put("moveDown", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                useInput(KeyEvent.VK_S);
+            }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke("D"), "moveRight");
+        actionMap.put("moveRight", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                useInput(KeyEvent.VK_D);
+            }
+        });
     }
 
     private void applySettings() {
@@ -96,17 +131,67 @@ public class GUI2048 extends JFrame{
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("Options");
 
+        JMenuItem newGameItem = new JMenuItem("New Game");
+        newGameItem.addActionListener(e -> startNewGame());
+
         JMenuItem settingsItem = new JMenuItem("Settings");
         settingsItem.addActionListener(e -> openSettingsDialog());
 
         JMenuItem highScoresItem = new JMenuItem("High Scores");
         highScoresItem.addActionListener(e -> displayHighScores());
 
+        menu.add(newGameItem); // Add this line
         menu.add(settingsItem);
         menu.add(highScoresItem);
         menuBar.add(menu);
         setJMenuBar(menuBar);
     }
+    
+    private void startNewGame() {
+        // Prompt for grid size
+        String[] gridSizes = {"4", "5", "6"};
+        String gridSizeStr = (String) JOptionPane.showInputDialog(
+                frame,
+                "Select Grid Size:",
+                "New Game",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                gridSizes,
+                gridSizes[0]);
+        int gridSize = 4; // Default
+        if (gridSizeStr != null && !gridSizeStr.isEmpty()) {
+            gridSize = Integer.parseInt(gridSizeStr);
+        }
+
+        // Prompt for game mode
+        String[] gameModes = {"Traditional", "Time Trial", "Move Limit"};
+        String gameMode = (String) JOptionPane.showInputDialog(
+                frame,
+                "Select Game Mode:",
+                "New Game",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                gameModes,
+                gameModes[0]);
+
+        // Initialize the game logic with the new settings
+        game = new logic2048(gridSize);
+        // If logic2048 supports setting the mode, set it here
+        // game.setMode(gameMode);
+
+        // Make score panel and add to frame
+        makeScorePanel();
+        frame.add(scoreLabel, BorderLayout.NORTH);
+
+        // Update the board panel to reflect the new grid size
+        makeBoardPanel(gridSize);
+        frame.add(boardPanel, BorderLayout.CENTER);
+
+        updateBoard();
+        scoreLabel.setText("Score: " + game.getScore());
+        frame.requestFocusInWindow();
+    }
+
 
     private void openSettingsDialog() {
         JDialog settingsDialog = new JDialog(this, "Settings", true);
@@ -171,22 +256,32 @@ public class GUI2048 extends JFrame{
     /**
      * Initializes the game board in a 4 x 4 grid
      */
-    private void makeBoardPanel() {
+    private void makeBoardPanel(int gridSize) {
+        if (boardPanel != null) {
+            frame.remove(boardPanel); // Remove existing boardPanel if any
+        }
         boardPanel = new JPanel();
-        boardPanel.setLayout(new GridLayout(4, 4));
-        tiles = new JLabel[4][4];
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                tiles[i][j] = new JLabel();
-                tiles[i][j].setPreferredSize(new Dimension(100, 100));
+        boardPanel.setLayout(new GridLayout(gridSize, gridSize));
+        tiles = new TileLabel[gridSize][gridSize];
+        Font tileFont = new Font("Arial", Font.BOLD, 24);
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                tiles[i][j] = new TileLabel(null, 0, tileFont);
+                tiles[i][j].setPreferredSize(new Dimension(400 / gridSize, 400 / gridSize));
                 tiles[i][j].setHorizontalAlignment(SwingConstants.CENTER);
+                tiles[i][j].setVerticalAlignment(SwingConstants.CENTER);
                 tiles[i][j].setOpaque(true);
                 tiles[i][j].setBackground(Color.LIGHT_GRAY);
                 tiles[i][j].setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 boardPanel.add(tiles[i][j]);
             }
         }
+        frame.add(boardPanel, BorderLayout.CENTER);
+        frame.revalidate();
+        frame.repaint();
     }
+
+
     
     /**
      * Initializes the score panel
@@ -194,12 +289,17 @@ public class GUI2048 extends JFrame{
      * @post	the score panel with be initizaled to 0 points
      */
     private void makeScorePanel(){
+        if (scorePanel != null) {
+            frame.remove(scorePanel);
+        }
         scorePanel = new JPanel();
         scorePanel.setLayout(new GridLayout(1, 1));
         scoreLabel = new JLabel("Score: " + game.getScore());
         scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
         scorePanel.add(scoreLabel);
+        // Do not add to frame here; it's added in startNewGame()
     }
+
     
     /**
      * Handles the user input's from the keyboard (W,A,S,D) and calls the neccessary
@@ -208,9 +308,9 @@ public class GUI2048 extends JFrame{
      * 
      * @param	e - The key pressed by the user
      */
-    private void useInput(KeyEvent e){
+    private void useInput(int keyCode) {
         boolean validMove = false;
-    	switch (e.getKeyCode()){
+        switch (keyCode) {
             case KeyEvent.VK_W:
                 game.moveUp();
                 break;
@@ -219,21 +319,21 @@ public class GUI2048 extends JFrame{
                 break;
             case KeyEvent.VK_S:
                 game.moveDown();
-                break;  
+                break;
             case KeyEvent.VK_D:
                 game.moveRight();
                 break;
             default:
-            	playSound("Sounds/Beep.wav");
+                playSound("Sounds/Beep.wav");
                 JOptionPane.showMessageDialog(null, "Invalid key! Use W, A, S, D for moves.");
                 return;
         }
-    	if (game.hasMadeMove()) {
+        if (game.hasMadeMove()) {
             validMove = true;
         }
-    
+
         if (validMove) {
-            playSound("Sounds/Move.wav"); 
+            playSound("Sounds/Move.wav");
             updateBoard();
             scoreLabel.setText("Score: " + game.getScore());
             if (!game.hasMoves()) {
@@ -248,6 +348,7 @@ public class GUI2048 extends JFrame{
             }
         }
     }
+
     
     /**
      * Creates a copy of the current game board to be compared
@@ -301,24 +402,26 @@ public class GUI2048 extends JFrame{
      */
     private void updateBoard() {
         Tile[][] board = game.getGameBoard().getBoard();
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        int gridSize = game.getGameBoard().getGridSize();
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
                 Tile tile = board[i][j];
+                TileLabel tileLabel = tiles[i][j];
                 if (tile == null) {
-                    tiles[i][j].setIcon(null);
-                    tiles[i][j].setText("");
-                    tiles[i][j].setBackground(Color.LIGHT_GRAY);
+                    tileLabel.setTileIcon(null);
+                    tileLabel.setValue(0);
+                    tileLabel.setBackground(Color.LIGHT_GRAY);
                 } else {
                     int value = tile.getValue();
-                    tiles[i][j].setText("" + value);
-                    tiles[i][j].setBackground(getNumberColor(value));
-                    tiles[i][j].setFont(new Font("Arial", Font.BOLD, 30));
-                    tiles[i][j].setForeground(Color.BLACK);
+                    tileLabel.setTileIcon(imageMap.get(value));
+                    tileLabel.setValue(value);
+                    tileLabel.setBackground(getNumberColor(value));
                 }
             }
         }
+        scoreLabel.setText("Score: " + game.getScore());
     }
-    
+
     
     /**
      * Returns the color of the background of each respective tile
@@ -328,32 +431,33 @@ public class GUI2048 extends JFrame{
      */
     private Color getNumberColor(int val){
         switch (val){
-	        case 2:
-	            return new Color(191, 255, 191); 
-	        case 4:
-	            return new Color(153, 255, 153); 
-	        case 8:
-	            return new Color(102, 255, 102);
-	        case 16:
-	            return new Color(51, 255, 51);  
-	        case 32:
-	            return new Color(0, 204, 255);   
-	        case 64:
-	            return new Color(0, 153, 255);   
-	        case 128:
-	            return new Color(0, 102, 204); 
-	        case 256:
-	            return new Color(0, 76, 153);   
-	        case 512:
-	            return new Color(0, 51, 102);    
-	        case 1024:
-	            return new Color(0, 25, 51);     
-	        case 2048:
-	            return new Color(0, 0, 30);      
-	        default:
-	            return new Color(0, 0, 51);  
+            case 2:
+                return new Color(255, 230, 230); // Light red
+            case 4:
+                return new Color(230, 255, 230); // Light green
+            case 8:
+                return new Color(255, 204, 204); // Pink red
+            case 16:
+                return new Color(204, 255, 204); // Light green
+            case 32:
+                return new Color(255, 153, 153); // Soft red
+            case 64:
+                return new Color(153, 255, 153); // Soft green
+            case 128:
+                return new Color(255, 102, 102); // Red
+            case 256:
+                return new Color(102, 255, 102); // Green
+            case 512:
+                return new Color(255, 255, 153); // Light gold
+            case 1024:
+                return new Color(255, 255, 102); // Gold
+            case 2048:
+                return new Color(255, 255, 51);  // Bright gold
+            default:
+                return new Color(255, 255, 255); // White or default
         }
     }
+
     
     // Music and Sound Methods
     /**
