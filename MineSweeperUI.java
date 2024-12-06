@@ -1,6 +1,6 @@
 /**
- * Names: Connor O'Neill, Eli Jordan, Derek Hoshaw, 
- * Net Ids: connoroneill ejordan3 dthoshaw
+ * Names: Connor O'Neill, Eli Jordan, Derek Hoshaw, AJ Becerra
+ * Net Ids: connoroneill ejordan3 dthoshaw AJBECERRA
  */
 
 import javax.swing.*;
@@ -66,7 +66,7 @@ public class MineSweeperUI extends JFrame {
      * Explains how to play the game, the win and lose conditions,
      * and provides basic gameplay instructions.
      */
-    private void showGameRules() {
+    public void showGameRules() {
         String rules = """
                 How to Play Minesweeper:
                 - Left-click to reveal a tile.
@@ -224,6 +224,7 @@ public class MineSweeperUI extends JFrame {
             JOptionPane.showMessageDialog(this, "You won! Congratulations!");
             revealAllMines();
             gameOver = true;
+            game.setHasWon();
         }
     }
 

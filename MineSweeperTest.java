@@ -1,6 +1,6 @@
 /**
- * Names: Connor O'Neill, Eli Jordan, Derek Hoshaw, 
- * Net Ids: connoroneill ejordan3 dthoshaw
+ * Names: Connor O'Neill, Eli Jordan, Derek Hoshaw, AJ Becerra
+ * Net Ids: connoroneill ejordan3 dthoshaw AJBECERRA
  */
 
 import static org.junit.jupiter.api.Assertions.*;

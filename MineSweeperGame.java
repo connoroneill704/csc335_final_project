@@ -1,6 +1,6 @@
 /**
- * Names: Connor O'Neill, Eli Jordan, Derek Hoshaw, 
- * Net Ids: connoroneill ejordan3 dthoshaw
+ * Names: Connor O'Neill, Eli Jordan, Derek Hoshaw, AJ Becerra
+ * Net Ids: connoroneill ejordan3 dthoshaw AJBECERRA
  */
 
 import java.util.Random;
@@ -13,6 +13,7 @@ public class MineSweeperGame {
     private final int cols;
     private final int mines;
     private final Cell[][] grid;
+    private boolean hasWon = false;
 
     public MineSweeperGame(int rows, int cols, int mines) {
         this.rows = rows;
@@ -126,4 +127,22 @@ public class MineSweeperGame {
     public int getCols() {
         return cols;
     }
+
+    /**
+     * Retrieves if the game has been beat.
+     *
+     * @return if the game has been beat
+     */
+	public boolean getHasWon() {
+		return hasWon;
+	}
+	
+	/**
+     * Retrieves if the game has been beat.
+     *
+     * @return if the game has been beat
+     */
+	public void setHasWon() {
+		hasWon = true;
+	}
 }

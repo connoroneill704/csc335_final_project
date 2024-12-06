@@ -263,6 +263,16 @@ public class GUI2048 {
             // Check for game over
             if (!game.hasMoves()) {
                 playSound("Sounds/Beep.wav");
+                if (!game.getSecLife()) {
+                	MineSweeperGame mineGame = new MineSweeperGame(8, 8, 1);
+                	MineSweeperUI mineUI = new MineSweeperUI(mineGame);
+                	mineUI.showGameRules();
+                    if (mineGame.getHasWon()) {
+                    	game.setSecLife();
+                    	game.randomizeBoard();
+                    }
+            	}
+                else {
                 stopBackground();
                 String name = JOptionPane.showInputDialog(frame, "Game Over! Your score is: " + game.getScore() + "\nEnter your name:");
                 if (name != null && !name.trim().isEmpty()) {
@@ -282,6 +292,7 @@ public class GUI2048 {
                 }
                 // If NO, you can leave the window open or close if you prefer
                 return;
+                }
             }
         }
     }

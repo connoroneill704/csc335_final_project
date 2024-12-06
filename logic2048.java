@@ -7,6 +7,7 @@ public class logic2048 {
     private boolean madeMove;
     private Stack<Tile[][]> boardHistory;
     private Stack<Integer> scoreHistory;
+    private boolean secondLife = false;
 
     public logic2048(int gridSize) {
         gameBoard = new board2048(gridSize);
@@ -230,5 +231,17 @@ public class logic2048 {
         } else {
             System.out.println("No moves to undo.");
         }
+    }
+    
+    public void randomizeBoard() {
+    	gameBoard.randomizeBoard();
+    }
+    
+    public boolean getSecLife() {
+    	return secondLife;
+    }
+    
+    public void setSecLife() {
+    	secondLife = true;
     }
 }

@@ -82,4 +82,36 @@ public class board2048 {
         }
         return copy;
     }
+    
+    /**
+     * Randomizes the positions of the existing tiles on the board.
+     * Ensures all existing tiles are shuffled without altering their values.
+     */
+    public void randomizeBoard() {
+        Random rand = new Random();
+        List<Tile> tiles = new ArrayList<>();
+
+        // Collect all non-null tiles
+        for (int i = 0; i < gridSize; i++) {
+            for (int j = 0; j < gridSize; j++) {
+                if (board[i][j] != null) {
+                    tiles.add(board[i][j]);
+                    board[i][j] = null; // Clear the board
+                }
+            }
+        }
+
+        // Shuffle the tiles
+        for (Tile tile : tiles) {
+            int row, col;
+            do {
+                row = rand.nextInt(gridSize);
+                col = rand.nextInt(gridSize);
+            } while (board[row][col] != null); // Find an empty spot
+            tile.setRow(row);
+            tile.setCol(col);
+            board[row][col] = tile;
+        }
+    }
+
 }

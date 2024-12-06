@@ -3,6 +3,8 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.SwingUtilities;
+
 public class manager2048 {
     private logic2048 gameLogic;
     private String mode;
@@ -11,6 +13,7 @@ public class manager2048 {
     private boolean gameOver;
     private HighScoreManager highScoreManager;
     private static Scanner scanner;
+    private boolean secondLife = false;
 
     public manager2048(String mode) {
         this.mode = mode;
@@ -86,12 +89,22 @@ public class manager2048 {
                     break;
                 }
                 if (!gameLogic.hasMoves()) {
-                    System.out.println("Game Over!");
-                    gameOver = true;
-                    break;
+                	if (!secondLife) {
+	                	MineSweeperGame game = new MineSweeperGame(8, 8, 1);
+	                    SwingUtilities.invokeLater(() -> new MineSweeperUI(game));
+	                    if (game.getHasWon()) {
+	                    	secondLife = true;
+	                    	gameLogic.randomizeBoard();
+	                    }
+                	}
+                    if (!gameLogic.hasMoves())
+                    	System.out.println("Game Over!");
+                    	gameOver = true;
+                    	break;
+                    }
                 }
             }
-        }
+        
         endGame();
         scanner.close();
     }
