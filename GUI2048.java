@@ -354,10 +354,18 @@ public class GUI2048 {
 		}
 
 		if (validMove) {
+			int val=0;
+			if (movesLeft > 0) {
+	            movesLeft--;
+	            val=1;
+	        }
 			playSound("Sounds/Move.wav");
 			updateBoard();
-			scoreLabel.setText("Score: " + game.getScore());
-
+			scoreLabel.setText(getScoreDisplay());
+			if (movesLeft == 0 && val==1) {
+	            JOptionPane.showMessageDialog(frame, "No more moves left! Game Over.");
+	            endGame();
+	        }
 			// Check for win
 			if (game.isWon()) {
 				playSound("Sounds/Move.wav");
