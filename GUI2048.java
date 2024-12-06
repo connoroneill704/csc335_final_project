@@ -19,6 +19,9 @@ public class GUI2048 {
     private Settings settings;
     private JFrame frame;
     private JPanel controlPanel;
+    private int timeLeft;
+    private int movesLeft;
+    private Timer timer; 
 
     public GUI2048() {
         // Initialize the main JFrame
@@ -27,6 +30,7 @@ public class GUI2048 {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
+        frame.setContentPane(new BackgroundPanel("images/christmas_background.jpg"));
 
         loadImages();
         playBackground();
@@ -108,15 +112,22 @@ public class GUI2048 {
 
         game = new logic2048(gridSize);
         // If logic2048 supports setting the mode, set it here: game.setMode(gameMode);
+        if (timer != null) {
+            timer.stop();
+        }
 
+        switch (gameMode) {
+            case "Time Trial":
+                timeLeft = 60; // Set to 60 seconds
+                startTimer();
+                break;
+            case "Move Limit":
+                movesLeft = 30; // Set to 30 moves
+                break;
+        }
         makeScorePanel();
-        frame.add(scoreLabel, BorderLayout.NORTH);
-
         makeBoardPanel(gridSize);
-        frame.add(boardPanel, BorderLayout.CENTER);
-
         updateBoard();
-        scoreLabel.setText("Score: " + game.getScore());
         frame.requestFocusInWindow();
     }
 
@@ -134,7 +145,7 @@ public class GUI2048 {
         });
 
         JLabel themeLabel = new JLabel("Theme:");
-        String[] themes = {"Default", "Dark", "Light"};
+        String[] themes = {"Christmas"};
         JComboBox<String> themeComboBox = new JComboBox<>(themes);
         themeComboBox.setSelectedItem(settings.getTheme());
         themeComboBox.addActionListener(e -> {
@@ -161,11 +172,19 @@ public class GUI2048 {
     }
 
     private void setVolume(double volume) {
-        // Implement volume adjustment on background and sound effects here
+    	try {
+            if (background != null && background.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
+                FloatControl gainControl = (FloatControl) background.getControl(FloatControl.Type.MASTER_GAIN);
+                float dB = (float) (Math.log10(Math.max(volume, 0.0001)) * 20);
+                gainControl.setValue(dB);
+            }
+        } catch (Exception e) {
+            System.err.println("Error adjusting volume: " + e.getMessage());
+        }
     }
 
     private void setTheme(String theme) {
-        // Implement theme change here
+    	frame.repaint();
     }
 
     private void displayHighScores() {
@@ -205,15 +224,70 @@ public class GUI2048 {
     }
 
     private void makeScorePanel() {
-        if (scorePanel != null) {
-            frame.remove(scorePanel);
+        if (scorePanel == null) {
+            scorePanel = new JPanel();
+            scorePanel.setLayout(new GridLayout(1, 1));
+            frame.add(scorePanel, BorderLayout.NORTH);
         }
-        scorePanel = new JPanel();
-        scorePanel.setLayout(new GridLayout(1, 1));
-        scoreLabel = new JLabel("Score: " + game.getScore());
+
+        // Remove old components from the score panel
+        scorePanel.removeAll();
+
+        // Create and add the updated score label
+        scoreLabel = new JLabel(getScoreDisplay());
         scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
         scorePanel.add(scoreLabel);
+        scorePanel.revalidate();
+        scorePanel.repaint();
     }
+
+    
+    private String getScoreDisplay() {
+        StringBuilder display = new StringBuilder("Score: " + game.getScore());
+        if (timeLeft > 0) {
+            display.append(" | Time Left: ").append(timeLeft).append("s");
+        } else if (movesLeft > 0) {
+            display.append(" | Moves Left: ").append(movesLeft);
+        }
+        return display.toString();
+    }
+    
+    private void startTimer() {
+        timer = new Timer(1000, e -> {
+            timeLeft--;
+            scoreLabel.setText(getScoreDisplay()); // Update the display every second
+
+            if (timeLeft <= 0) {
+                timer.stop();
+                JOptionPane.showMessageDialog(frame, "Time's up! Game Over.");
+                endGame();
+            }
+        });
+        timer.start();
+    }
+    
+    private void endGame() {
+        if (timer != null) {
+            timer.stop();
+        }
+        String name = JOptionPane.showInputDialog(frame, "Game Over! Your score is: " + game.getScore() + "\nEnter your name:");
+        if (name != null && !name.trim().isEmpty()) {
+            highScoreManager.addScore(name, game.getScore());
+        }
+        displayHighScores();
+
+        int choice = JOptionPane.showConfirmDialog(
+            frame,
+            "Would you like to start a new game?",
+            "Game Over",
+            JOptionPane.YES_NO_OPTION
+        );
+        if (choice == JOptionPane.YES_OPTION) {
+            startNewGame();
+        }
+    }
+
+    
 
     private void useInput(int keyCode) {
         boolean validMove = false;
@@ -241,6 +315,14 @@ public class GUI2048 {
         }
 
         if (validMove) {
+        	if (movesLeft > 0) {
+                movesLeft--;
+                if (movesLeft <= 0) {
+                    JOptionPane.showMessageDialog(frame, "No more moves! Game Over.");
+                    endGame();
+                    return;
+                }
+            }
             playSound("Sounds/Move.wav");
             updateBoard();
             scoreLabel.setText("Score: " + game.getScore());
@@ -263,16 +345,6 @@ public class GUI2048 {
             // Check for game over
             if (!game.hasMoves()) {
                 playSound("Sounds/Beep.wav");
-                if (!game.getSecLife()) {
-                	MineSweeperGame mineGame = new MineSweeperGame(8, 8, 1);
-                	MineSweeperUI mineUI = new MineSweeperUI(mineGame);
-                	mineUI.showGameRules();
-                    if (mineGame.getHasWon()) {
-                    	game.setSecLife();
-                    	game.randomizeBoard();
-                    }
-            	}
-                else {
                 stopBackground();
                 String name = JOptionPane.showInputDialog(frame, "Game Over! Your score is: " + game.getScore() + "\nEnter your name:");
                 if (name != null && !name.trim().isEmpty()) {
@@ -292,7 +364,6 @@ public class GUI2048 {
                 }
                 // If NO, you can leave the window open or close if you prefer
                 return;
-                }
             }
         }
     }
