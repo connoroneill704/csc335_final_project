@@ -6,6 +6,14 @@ import java.util.HashMap;
 import javax.sound.sampled.*;
 import java.util.List;
 
+/**
+ * Runs the Graphical User Interface for the 2048 game
+ * 
+ * Connor O'Neil 	- connoroneil
+ * Eli Jordan		- ejordan3
+ * Derek Hoshaw 	- dthoshaw
+ * AJ Becerra		- ajbecerra
+ */
 public class GUI2048 {
     private logic2048 game;
     private HashMap<Integer, ImageIcon> imageMap;
@@ -23,6 +31,9 @@ public class GUI2048 {
     private int movesLeft;
     private Timer timer; 
 
+    /**
+     * Constructs the GUI for 2048 game
+     */
     public GUI2048() {
         // Initialize the main JFrame
         frame = new JFrame("2048 game");
@@ -51,10 +62,16 @@ public class GUI2048 {
         setupKeyBindings();
     }
 
+    /**
+     * Runs GUI2048.java
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new GUI2048());
     }
 
+    /**
+     * Applies the settings from the settings file to the current game
+     */
     private void applySettings() {
         double volume = settings.getVolume();
         setVolume(volume);
@@ -62,6 +79,9 @@ public class GUI2048 {
         setTheme(theme);
     }
 
+    /**
+     * Creates menu bar to move around the GUI
+     */
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("Options");
@@ -83,6 +103,9 @@ public class GUI2048 {
         frame.setJMenuBar(menuBar);
     }
 
+    /**
+     * Starts a new game of 2048 by prompting for a grid size selection, game mode selection, then starts the game
+     */
     private void startNewGame() {
         // Prompt for grid size
         String[] gridSizes = {"4", "5", "6"};
@@ -131,6 +154,9 @@ public class GUI2048 {
         frame.requestFocusInWindow();
     }
 
+    /**
+     * Opens the settings dialog box and allows for changes to be made to the theme and volume
+     */
     private void openSettingsDialog() {
         JDialog settingsDialog = new JDialog(frame, "Settings", true);
         settingsDialog.setSize(300, 200);
@@ -171,6 +197,9 @@ public class GUI2048 {
         settingsDialog.setVisible(true);
     }
 
+    /**
+     * Sets the volume of the sounds
+     */
     private void setVolume(double volume) {
     	try {
             if (background != null && background.isControlSupported(FloatControl.Type.MASTER_GAIN)) {
@@ -183,10 +212,16 @@ public class GUI2048 {
         }
     }
 
+    /**
+     * Sets the theme of the game
+     */
     private void setTheme(String theme) {
     	frame.repaint();
     }
 
+    /**
+     * Displays the high scores dialog box 
+     */
     private void displayHighScores() {
         List<HighScoreManager.ScoreEntry> highScores = highScoreManager.getHighScores();
         StringBuilder sb = new StringBuilder();
@@ -198,6 +233,9 @@ public class GUI2048 {
         JOptionPane.showMessageDialog(frame, sb.toString(), "High Scores", JOptionPane.INFORMATION_MESSAGE);
     }
 
+    /**
+     * Creates the display area for the 2048 board game
+     */
     private void makeBoardPanel(int gridSize) {
         if (boardPanel != null) {
             frame.remove(boardPanel);
@@ -223,6 +261,9 @@ public class GUI2048 {
         frame.repaint();
     }
 
+    /**
+     * Creates display panel for the score of the game
+     */
     private void makeScorePanel() {
         if (scorePanel == null) {
             scorePanel = new JPanel();
@@ -241,7 +282,9 @@ public class GUI2048 {
         scorePanel.repaint();
     }
 
-    
+    /**
+     * Creates the score and game mode display fields
+     */
     private String getScoreDisplay() {
         StringBuilder display = new StringBuilder("Score: " + game.getScore());
         if (timeLeft > 0) {
@@ -252,6 +295,9 @@ public class GUI2048 {
         return display.toString();
     }
     
+    /**
+     * Starts the timer for the game
+     */
     private void startTimer() {
         timer = new Timer(1000, e -> {
             timeLeft--;
@@ -266,6 +312,9 @@ public class GUI2048 {
         timer.start();
     }
     
+    /**
+     * Runs when the game ends to save high score and choose to start a new game
+     */
     private void endGame() {
         if (timer != null) {
             timer.stop();
@@ -287,8 +336,9 @@ public class GUI2048 {
         }
     }
 
-    
-
+    /**
+     * Runs the game for one input and checks for game status every input
+     */
     private void useInput(int keyCode) {
         boolean validMove = false;
         switch (keyCode) {
@@ -388,6 +438,9 @@ public class GUI2048 {
         }
     }
 
+    /**
+     * Updates the game board GUI based on new positions
+     */
     private void updateBoard() {
         Tile[][] board = game.getGameBoard().getBoard();
         int gridSize = game.getGameBoard().getGridSize();
@@ -410,6 +463,9 @@ public class GUI2048 {
         scoreLabel.setText("Score: " + game.getScore());
     }
 
+    /**
+     * Returns a color for each tile based on the input value
+     */
     private Color getNumberColor(int val) {
         switch (val) {
             case 2: return new Color(255, 230, 230);
@@ -427,6 +483,9 @@ public class GUI2048 {
         }
     }
 
+    /**
+     * Plays background music for the game 
+     */
     private void playBackground() {
         try {
             File file = new File("Sounds/Cool.wav");
@@ -442,6 +501,9 @@ public class GUI2048 {
         }
     }
 
+    /**
+     * Stops background music for the game 
+     */
     private void stopBackground() {
         if (background != null && background.isRunning()) {
             background.stop();
@@ -449,6 +511,9 @@ public class GUI2048 {
         }
     }
 
+    /**
+     * Plays sound effect for the game 
+     */
     private void playSound(String soundFile) {
         try {
             File file = new File(soundFile);
@@ -462,6 +527,9 @@ public class GUI2048 {
         }
     }
 
+    /**
+     * Creates control panel for undo button 
+     */
     private void makeControlPanel() {
         controlPanel = new JPanel();
         undoButton = new JButton("Undo");
@@ -473,6 +541,9 @@ public class GUI2048 {
         controlPanel.add(undoButton);
     }
 
+    /**
+     * Parses user inputs for each action performed
+     */
     private void setupKeyBindings() {
         InputMap inputMap = frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap actionMap = frame.getRootPane().getActionMap();
@@ -510,6 +581,9 @@ public class GUI2048 {
         });
     }
 
+    /**
+     * loads each tile image
+     */
     private void loadImages() {
         imageMap = new HashMap<>();
         int[] values = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048};
