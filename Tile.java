@@ -1,4 +1,6 @@
 /**
+ * Represents single Tile for 2048 game
+ * 
  * Connor O'Neil 	- connoroneil
  * Eli Jordan		- ejordan3
  * Derek Hoshaw 	- dthoshaw

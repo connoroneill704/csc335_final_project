@@ -3,6 +3,14 @@ import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * Manages all peices of game to run together with high score
+ * 
+ * Connor O'Neil 	- connoroneil
+ * Eli Jordan		- ejordan3
+ * Derek Hoshaw 	- dthoshaw
+ * AJ Becerra		- ajbecerra
+ */
 public class manager2048 {
     private logic2048 gameLogic;
     private String mode;
@@ -12,6 +20,16 @@ public class manager2048 {
     private HighScoreManager highScoreManager;
     private static Scanner scanner;
 
+    /**
+     * Constructs a manager unit to manage game and WOW factors
+     * 
+     * @param	- mode - the game mode chosen by the user
+     * @post	- mode will be set to mode
+     * @post	- game logic and high score will initialize their objects
+     * @post	- game over will be set to false
+     * @post	- scanner will be set to new scanner
+     * @post	- if a special game mode, sets their respective paramater
+     */
     public manager2048(String mode) {
         this.mode = mode;
         gameLogic = new logic2048(4); // Assuming a 4x4 grid
@@ -26,6 +44,17 @@ public class manager2048 {
         }
     }
     
+    /**
+     * Constructs a manager unit to manage game and WOW factors
+     * 
+     * @param	- mode - the game mode chosen by the user
+     * @param	- scanner - the inputted scanner to be used
+     * @post	- mode will be set to mode
+     * @post	- game logic and high score will initialize their objects
+     * @post	- game over will be set to false
+     * @post	- scanner will be set to inputted scanner
+     * @post	- if a special game mode, sets their respective paramater
+     */
     public manager2048(String mode, Scanner scanner) {
     	this.mode = mode;
         gameLogic = new logic2048(4); // Assuming a 4x4 grid
@@ -40,6 +69,9 @@ public class manager2048 {
         this.scanner = scanner;
     }
 
+    /**
+     * Starts/Runs the text based 2048 game
+     */
     public void startGame() {
         printBoard();
 
@@ -96,6 +128,12 @@ public class manager2048 {
         scanner.close();
     }
 
+    /**
+     * Proccesses correct game logic for inputted command
+     * 
+     * @param	- command - the key pressed by the user to be moved
+     * @post	- a move will be made if command is valid input (w, a, s, d)
+     */
     private void processMove(char command) {
         switch (command) {
             case 'w':
@@ -115,6 +153,11 @@ public class manager2048 {
         }
     }
 
+    /**
+     * Prints text based UI for current game board
+     * 
+     * @post 	- prints game grid, high score, and game mode indicators
+     */
     private void printBoard() {
         Tile[][] board = gameLogic.getGameBoard().getBoard();
         int gridSize = gameLogic.getGameBoard().getGridSize();
@@ -139,6 +182,11 @@ public class manager2048 {
         System.out.println("+-----".repeat(gridSize) + "+\n");
     }
 
+    /**
+     * Prompts for username entry, adds user and their score to highScoreManager, then displays high scores
+     * 
+     * @post	- username entered will be added with end score to high score file
+     */
     private void endGame() {
         System.out.print("Enter your username: ");
         String name = scanner.nextLine();
@@ -147,6 +195,11 @@ public class manager2048 {
         scanner.close();
     }
 
+    /**
+     * Prints the high scores for each entry in highScoreManager
+     * 
+     * @post	- a print block with every high score in order
+     */
     private void displayHighScores() {
         System.out.println("\n--- High Scores ---");
         List<HighScoreManager.ScoreEntry> highScores = highScoreManager.getHighScores();
@@ -156,7 +209,12 @@ public class manager2048 {
         }
     }
 
-    // Timer for Time Trial mode
+    /**
+     * Starts timer for time trial mode
+     * 
+     * @param	- seconds - the duration (in seconds) of the timer
+     * @post	- a timer will be running, when the timer hits zero, it will stop
+     */
     private void startTimer(int seconds) {
         Timer timer = new Timer();
         timeLeft = seconds;
@@ -173,12 +231,12 @@ public class manager2048 {
         };
         timer.scheduleAtFixedRate(task, 0, 1000);
     }
-    public static void main(String[] args) {
-        String mode = selectGameMode();
-        manager2048 gameManager = new manager2048(mode);
-        gameManager.startGame();
-    }
 
+    /**
+     * Selects the game mode that the user wants to play
+     * 
+     * @return	- mode field will be set to chosen mode
+     */
     private static String selectGameMode() {
         System.out.println("Choose a game mode: Traditional, Time Trial, Move Limit");
         String input = scanner.nextLine().trim().toLowerCase();
@@ -197,18 +255,49 @@ public class manager2048 {
         scanner.close();
         return mode;
     }
+    
+    /**
+     * Gets the game mode 
+     * 
+     * @return	- the game mode
+     */
     public String getMode() {
         return mode;
     }
 
+    /**
+     * Gets the status if the game is over 
+     * 
+     * @return	- the gameOver field
+     */
     public boolean isGameOver() {
         return gameOver;
     }
 
+    /**
+     * Gets the gameLogic
+     * 
+     * @return	- the gameLogic field
+     */
     public logic2048 getGameLogic() {
         return gameLogic;
     }
+    
+    /**
+     * Gets the high score manager 
+     * 
+     * @return	- the highScoreManager field
+     */
     public HighScoreManager getHighScoreManager() {
         return highScoreManager;
+    }
+    
+    /**
+     * Runs manager2048.java by calling to select a game mode, then starting the game
+     */
+    public static void main(String[] args) {
+        String mode = selectGameMode();
+        manager2048 gameManager = new manager2048(mode);
+        gameManager.startGame();
     }
 }

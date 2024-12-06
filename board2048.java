@@ -3,6 +3,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
+ * Represents a game board in 2048
+ * 
  * Connor O'Neil 	- connoroneil
  * Eli Jordan		- ejordan3
  * Derek Hoshaw 	- dthoshaw

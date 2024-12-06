@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 /**
+ * Displays Tile Label for GUI
+ * 
  * Connor O'Neil 	- connoroneil
  * Eli Jordan		- ejordan3
  * Derek Hoshaw 	- dthoshaw

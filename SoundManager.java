@@ -2,6 +2,8 @@ import javax.sound.sampled.*;
 import java.io.File;
 
 /**
+ * Manages sounds for WOW factor
+ * 
  * Connor O'Neil 	- connoroneil
  * Eli Jordan		- ejordan3
  * Derek Hoshaw 	- dthoshaw
