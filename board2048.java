@@ -2,10 +2,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Represents a game board in 2048
+ * 
+ * Connor O'Neil 	- connoroneil
+ * Eli Jordan		- ejordan3
+ * Derek Hoshaw 	- dthoshaw
+ * AJ Becerra		- ajbecerra
+ */
 public class board2048 {
     private int gridSize;
     private Tile[][] board;
 
+    /**
+     * Constructs a 2048 board to be filled with tiles and manipulated by logic2048.java
+     * 
+     * @param	- gridSize - the amounts of columns and rows to be used for the game board
+     * @post	- the game board will be set to the gridSize inputted, and have two randomly placed tiles. 
+     */
     public board2048(int gridSize) {
         this.gridSize = gridSize;
         board = new Tile[gridSize][gridSize];
@@ -13,11 +27,21 @@ public class board2048 {
         addNewTile();
         addNewTile();
     }
-
+    
+    /**
+     * Gets the board grid 
+     * 
+     * @return	- the board field 
+     */
     public Tile[][] getBoard() {
         return board;
     }
 
+    /**
+     * Adds a new tile to the game board (either 2 or 4, higher probability to be 2)
+     * 
+     * @post	- a new tile will be added to the board at a random, unoccuppied position, with a value 2 or 4
+     */
     public void addNewTile() {
         Random rand = new Random();
         int value = rand.nextDouble() < 0.9 ? 2 : 4;
@@ -40,6 +64,11 @@ public class board2048 {
         board[randCell[0]][randCell[1]] = new Tile(value, randCell[0], randCell[1]);
     }
 
+    /**
+     * Resets the merged status for all tiles
+     * 
+     * @post	- every tile in play will have a merged status of false
+     */
     public void resetMergedFlags() {
         for (int i = 0; i < gridSize; i++) {
             for (int j = 0; j < gridSize; j++) {
@@ -50,6 +79,16 @@ public class board2048 {
         }
     }
 
+    /**
+     * Sets the location fields to the tile object inputted
+     * 
+     * @param	- row - the new row of the tile object
+     * @param	- col - the new column of the tile object
+     * @param	- tile - the tile being manipulated
+     * @pre		- row is in range of playable rows
+     * @pre		- col is in range of playable columns
+     * @post	- the tile object inputted will be moved to the index [row][column]
+     */
     public void setTile(int row, int col, Tile tile) {
         if (tile != null) {
             tile.setRow(row);
@@ -58,15 +97,33 @@ public class board2048 {
         board[row][col] = tile;
     }
 
+    /**
+     * Gets the tile object at a grid location 
+     * 
+     * @param	- row - the new row of the tile object
+     * @param	- col - the new column of the tile object
+     * @pre		- row is in range of playable rows
+     * @pre		- col is in range of playable columns
+     * @return	- the tile at the index [row][column]
+     */
     public Tile getTile(int row, int col) {
         return board[row][col];
     }
 
+    /**
+     * Gets the grid size 
+     * 
+     * @return	- the grid size field 
+     */
     public int getGridSize() {
         return gridSize;
     }
 
-    // Method to copy the board for undo functionality
+    /**
+     * Creates a copy of the board to be used for the undo button 
+     * 
+     * @return	- a copy of the current board grid 
+     */
     public Tile[][] copyBoard() {
         Tile[][] copy = new Tile[gridSize][gridSize];
         for (int i = 0; i < gridSize; i++) {
