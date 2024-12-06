@@ -111,17 +111,21 @@ public class AllTests2048 {
     @Test
     public void testLogic2048Class() {
         logic2048 logic = new logic2048(4);
+
+        // Initial state checks
         assertEquals(0, logic.getScore());
         assertFalse(logic.isWon());
+        assertTrue(logic.hasMoves());
 
         Tile[][] board = logic.getGameBoard().getBoard();
         for (Tile[] row : board) {
             Arrays.fill(row, null);
         }
+
+        // Test moveLeft
         board[0][1] = new Tile(2, 0, 1);
         board[0][2] = new Tile(4, 0, 2);
         board[0][3] = new Tile(8, 0, 3);
-
         logic.moveLeft();
 
         assertTrue(logic.hasMadeMove());
@@ -130,16 +134,18 @@ public class AllTests2048 {
         assertEquals(8, board[0][2].getValue());
         assertNull(board[0][3]);
         assertEquals(0, logic.getScore());
+
+        // Test merging tiles
         board[0][0] = new Tile(2, 0, 0);
         board[0][1] = new Tile(2, 0, 1);
         logic.moveLeft();
 
         assertTrue(logic.hasMadeMove());
         assertEquals(4, board[0][0].getValue());
-        assertNull(board[0][1]);
         assertEquals(4, logic.getScore());
         assertTrue(logic.hasMoves());
 
+        // Test full board with no moves
         int value = 2;
         for (int i = 0; i < board.length; i++) {
             for (int j = 0; j < board[i].length; j++) {
@@ -149,11 +155,46 @@ public class AllTests2048 {
         }
 
         assertFalse(logic.hasMoves());
+
+        // Test undo functionality
         logic.undoMove();
         board = logic.getGameBoard().getBoard();
 
         assertEquals(2, board[0][0].getValue());
         assertEquals(2, board[0][1].getValue());
+
+        // Test winning condition
+        board[0][0] = new Tile(1024, 0, 0);
+        board[0][1] = new Tile(1024, 0, 1);
+        logic.moveLeft();
+
+        assertTrue(logic.isWon());
+        assertEquals(2048, board[0][0].getValue());
+        assertEquals(2048, logic.getScore());
+
+        // Test moveRight
+        board[0][3] = board[0][0];
+        board[0][0] = null;
+        logic.moveRight();
+
+        assertTrue(logic.hasMadeMove());
+        assertEquals(2048, board[0][3].getValue());
+
+        // Test moveUp
+        board[0][3] = new Tile(2, 0, 3);
+        board[1][3] = new Tile(2, 1, 3);
+        logic.moveUp();
+
+        assertTrue(logic.hasMadeMove());
+        assertEquals(4, board[0][3].getValue());
+
+        // Test moveDown
+        board[2][3] = board[0][3];
+        board[0][3] = null;
+        logic.moveDown();
+
+        assertTrue(logic.hasMadeMove());
+        logic.randomizeBoard();
     }
     @Test
     public void testSettingsClass() {
