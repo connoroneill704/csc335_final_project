@@ -26,7 +26,7 @@ public class GUI2048 {
     public GUI2048() {
         // Initialize the main JFrame
         frame = new JFrame("2048 game");
-        frame.setSize(400, 500);
+        frame.setSize(600, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.setLayout(new BorderLayout());
@@ -39,9 +39,9 @@ public class GUI2048 {
         applySettings();
 
         createMenuBar();
-        startNewGame(); 
         makeControlPanel();
-
+        startNewGame();
+        
         frame.add(controlPanel, BorderLayout.SOUTH);
         frame.setFocusable(true);
         frame.requestFocusInWindow();
@@ -315,14 +315,6 @@ public class GUI2048 {
         }
 
         if (validMove) {
-        	if (movesLeft > 0) {
-                movesLeft--;
-                if (movesLeft <= 0) {
-                    JOptionPane.showMessageDialog(frame, "No more moves! Game Over.");
-                    endGame();
-                    return;
-                }
-            }
             playSound("Sounds/Move.wav");
             updateBoard();
             scoreLabel.setText("Score: " + game.getScore());
@@ -345,6 +337,36 @@ public class GUI2048 {
             // Check for game over
             if (!game.hasMoves()) {
                 playSound("Sounds/Beep.wav");
+
+                if (!game.getSecLife()) {
+                    // Launch Minesweeper for second chance
+                    game.setSecLife();
+                    MineSweeperGame mineGame = new MineSweeperGame(8, 8, 1); // 8x8 Minesweeper grid with 10 mines
+                    MineSweeperUI mineUI = new MineSweeperUI(mineGame);
+
+                    // Wait for Minesweeper to finish
+                    JOptionPane.showMessageDialog(frame, "Complete Minesweeper to earn a second chance!");
+                    mineUI.showGameRules();
+
+                    // Block until Minesweeper is closed
+                    mineUI.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosed(WindowEvent e) {
+                            if (mineGame.getHasWon()) {
+                                // Player won Minesweeper
+                                game.randomizeBoard();
+                                updateBoard();
+                                JOptionPane.showMessageDialog(frame, "You earned a second chance! The board has been randomized.");
+                            } else {
+                                // Player lost Minesweeper
+                                endGame();
+                            }
+                        }
+                    });
+                    return;
+                }
+
+                // Game over if second chance was already used
                 stopBackground();
                 String name = JOptionPane.showInputDialog(frame, "Game Over! Your score is: " + game.getScore() + "\nEnter your name:");
                 if (name != null && !name.trim().isEmpty()) {
@@ -362,8 +384,6 @@ public class GUI2048 {
                 if (choice == JOptionPane.YES_OPTION) {
                     startNewGame();
                 }
-                // If NO, you can leave the window open or close if you prefer
-                return;
             }
         }
     }

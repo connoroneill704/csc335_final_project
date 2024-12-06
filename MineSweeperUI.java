@@ -36,12 +36,13 @@ public class MineSweeperUI extends JFrame {
         
         setTitle("Minesweeper");
         setSize(600, 600);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE); // Only dispose of the Minesweeper window
 
         createMenu();
         initializeBoard();
         setVisible(true);
     }
+
 
     /**
      * Creates the menu bar for the Minesweeper game.
