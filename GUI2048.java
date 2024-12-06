@@ -328,15 +328,19 @@ public class GUI2048 {
 		boolean validMove = false;
 		switch (keyCode) {
 		case KeyEvent.VK_W:
+			playSound("Sounds/Move.wav");
 			game.moveUp();
 			break;
 		case KeyEvent.VK_A:
+			playSound("Sounds/Move.wav");
 			game.moveLeft();
 			break;
 		case KeyEvent.VK_S:
+			playSound("Sounds/Move.wav");
 			game.moveDown();
 			break;
 		case KeyEvent.VK_D:
+			playSound("Sounds/Move.wav");
 			game.moveRight();
 			break;
 		default:
@@ -356,7 +360,7 @@ public class GUI2048 {
 
 			// Check for win
 			if (game.isWon()) {
-				playSound("Sounds/Win.wav");
+				playSound("Sounds/Move.wav");
 				int choice = JOptionPane.showConfirmDialog(frame,
 						"You reached 2048! Would you like to continue playing?", "Congratulations!",
 						JOptionPane.YES_NO_OPTION);
